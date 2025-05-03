@@ -1,0 +1,41 @@
+# Python编译文件 & 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+
+# IDE配置（PyCharm专用）
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Flask实例文件夹 & 敏感配置
+instance/
+.env
+.flaskenv
+
+# 测试与覆盖率报告
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 打包与构建产物
+dist/
+build/
+*.egg-info/
+
+# 数据库文件（如SQLite）
+*.sqlite3
+*.sqlite3-journal
+
+# 静态文件缓存（Flask WebAssets）
+.webassets-cache
+
+# 日志文件
+*.log
