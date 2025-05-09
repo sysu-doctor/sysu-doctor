@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError
 from utils import Result
 from exts import db
-from models import DoctorModel
+from models import DoctorModel,DoctorInfoModel
 from vo import LoginVO
 
 bp = Blueprint("doctor", __name__, url_prefix='/doctor')
@@ -45,7 +45,25 @@ def register():
     try:
         doctor = DoctorModel(phone=phone, password=password, name=name)
         db.session.add(doctor)
+        db.session.flush()  # 获取自动生成的id
+
+        # 创建医生基本信息
+        doctor_info = DoctorInfoModel(
+            id=doctor.id,
+            phone=phone,
+            name=name,
+            gender=None,
+            hospital_id=None,
+            department_id=None,
+            internal_id=None,
+            position_rank=None,
+            specialty='',
+            birth_date=None,
+            avatar_url=None
+        )
+        db.session.add(doctor_info)
         db.session.commit()
+
     except IntegrityError as e:
         db.session.rollback()
         return jsonify(Result.error("该手机号已被注册！").to_dict())

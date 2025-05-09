@@ -1,7 +1,14 @@
 from flask import request, g, make_response
 from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
 
-WHITE_LIST = ["/user/login", "/user/register", "/doctor/login", "/doctor/register"]
+WHITE_LIST = [
+    "/patient/login",
+    "/patient/register",
+    "/doctor/login",
+    "/doctor/register",
+    "/patient/patient_manage",
+    "/doctor/doctor_manage"
+    ]
 
 
 # jwt拦截器
@@ -21,8 +28,6 @@ def jwt_interceptor():
     except Exception as e:
         # 返回具体的错误信息
         return make_response('', 401)
-
-
 
 
 # 返回格式

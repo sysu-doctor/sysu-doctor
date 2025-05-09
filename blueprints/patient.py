@@ -4,10 +4,11 @@ from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError
 from utils import Result
 from exts import db
-from models import UserModel
+from models import PatientModel,PatientInfoModel
 from vo import LoginVO
 
-bp = Blueprint("user", __name__, url_prefix='/user')
+# 改成patient可能更好
+bp = Blueprint("patient", __name__, url_prefix='/patient')
 
 
 @bp.route('/login', methods=['POST'])
@@ -18,19 +19,19 @@ def login():
     password = data.get('password')
 
     # 查询数据库
-    user = UserModel.query.filter_by(phone=phone).one_or_none()
+    patient = PatientModel.query.filter_by(phone=phone).one_or_none()
 
     # 数据处理
-    if not user:
+    if not patient:
         return jsonify(Result.error("该手机号未注册！").to_dict())
-    if password != user.password:
+    if password != patient.password:
         return jsonify(Result.error("密码错误！").to_dict())
 
     # 登录成功，生成JWT令牌
-    token = create_access_token(identity=user.id, additional_claims={"role":"user"})
+    token = create_access_token(identity=str(patient.id), additional_claims={"role":"patient"})
 
     #返回结果
-    login_vo = LoginVO(id=user.id, name=user.name, token=token, role="user")
+    login_vo = LoginVO(id=patient.id, name=patient.name, token=token, role="patient")
     result = Result.success(login_vo.to_dict())
     return jsonify(result.to_dict())
 
@@ -44,15 +45,30 @@ def register():
 
     # 数据库操作
     try:
-        user = UserModel(phone=phone, password=password, name=name)
-        db.session.add(user)
+        patient = PatientModel(phone=phone, password=password, name=name)
+        db.session.add(patient)
+        db.session.flush()
+
+        patient_info = PatientInfoModel(
+            id=patient.id,  # 显式关联主键
+            phone=phone,  # 同步手机号
+            name=name,  # 同步姓名
+            gender=None,
+            address=None,
+            avatar_url=None,
+            birth_date=None,
+            medical_history=''
+        )
+        db.session.add(patient_info)
         db.session.commit()
     except IntegrityError as e:
         db.session.rollback()
-        return jsonify(Result.error("该手机号已被注册！").to_dict())
+        if "phone" in str(e):
+            return jsonify(Result.error("该手机号已被注册").to_dict()), 400
+        return jsonify(Result.error("数据完整性错误").to_dict()), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify(Result.error("未知错误").to_dict())
+        return jsonify(Result.error("注册失败，请稍后再试").to_dict()), 500
 
     # 返回结果
     result = Result.success()
