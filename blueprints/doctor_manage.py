@@ -26,70 +26,59 @@ def patient_management():
 
     # 手机号格式验证
     if 'phone' in data and not validate_phone_number(data['phone']):
-        return jsonify(Result.fail("请输入有效的11位国内手机号").to_dict()), 400
+        return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
 
     # 出生日期验证
     if 'birth_date' in data:
         try:
             birth_date = datetime.strptime(data['birth_date'], "%Y-%m-%d").date()
             if birth_date > date.today():
-                return jsonify(Result.fail("出生日期不能晚于当前日期").to_dict()), 400
+                return jsonify(Result.error("出生日期不能晚于当前日期").to_dict()), 400
             data['birth_date'] = birth_date  # 替换为date对象
         except ValueError:
-            return jsonify(Result.fail("日期格式应为YYYY-MM-DD").to_dict()), 400
+            return jsonify(Result.error("日期格式应为YYYY-MM-DD").to_dict()), 400
 
     # 获取当前医生
-    doctor_id = get_jwt_identity()
+    doctor_id = str(get_jwt_identity())
 
     # 更新主表 DoctorInfoModel
-    doctor_info = DoctorInfoModel.query.filter_by(doctor_id=doctor_id).first()
+    doctor_info = DoctorInfoModel.query.filter_by(id=doctor_id).first()
     if not doctor_info:
-        return jsonify(Result.fail("医生信息不存在").to_dict()), 404
+        return jsonify(Result.error("医生信息不存在").to_dict()), 404
 
-    # 更新医生信息
-    for field, value in data.items():
-        setattr(doctor_info, field, value)
 
     # 同步手机号和姓名到 DoctorModel（登录表）
     doctor = DoctorModel.query.get(doctor_id)
+    if not doctor:
+        return jsonify(Result.error("医生账户不存在").to_dict()), 404
     doctor.phone = data['phone']
     doctor.name = data['name']
-
-    # 检查医院或科室是否变更
-    old_hospital_id = doctor_info.hospital_id
-    old_department_id = doctor_info.department_id
     try:
-        # 处理医院变更
-        if 'hospital_id' in data and data['hospital_id'] != old_hospital_id:
-            # 从旧医院移除
-            old_hospital = HospitalModel.query.get(old_hospital_id)
-            if old_hospital and doctor_info in old_hospital.doctors:
-                old_hospital.doctors.remove(doctor_info)
+        # 特殊处理关联字段
+        if 'hospital_id' in data:
+            hospital = HospitalModel.query.get(data['hospital_id'])
+            if not hospital:
+                return jsonify(Result.error("医院不存在").to_dict()), 400
+            doctor_info.hospital = hospital  # 赋模型对象而非ID
 
-            # 添加到新医院
-            new_hospital = HospitalModel.query.get(data['hospital_id'])
-            if new_hospital:
-                new_hospital.doctors.append(doctor_info)
+        if 'department_id' in data:
+            department = DepartmentModel.query.get(data['department_id'])
+            if not department:
+                return jsonify(Result.error("科室不存在").to_dict()), 400
+            doctor_info.department = department  # 赋模型对象而非ID
 
-        # 处理科室变更
-        if 'department_id' in data and data['department_id'] != old_department_id:
-            # 从旧科室移除
-            if old_department_id:
-                old_department = DepartmentModel.query.get(old_department_id)
-                if old_department and doctor_info in old_department.doctors:
-                    old_department.doctors.remove(doctor_info)
-
-            # 添加到新科室
-            if data['department_id']:
-                new_department = DepartmentModel.query.get(data['department_id'])
-                if new_department:
-                    new_department.doctors.append(doctor_info)
+        # 更新医生信息
+        for field, value in data.items():
+            if hasattr(doctor_info, field):
+                setattr(doctor_info, field, value)
 
         db.session.commit()
         return jsonify(Result.success().to_dict())
 
     except IntegrityError as e:
         db.session.rollback()
-        if 'uix_hospital_employee' in str(e):
-            return jsonify(Result.fail("该医院工号已存在").to_dict()), 400
-        return jsonify(Result.fail("数据更新失败").to_dict()), 400
+        return jsonify(Result.error("数据库操作失败，请检查数据完整性").to_dict()), 400
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(Result.error(f"服务器错误: {str(e)}").to_dict()), 500

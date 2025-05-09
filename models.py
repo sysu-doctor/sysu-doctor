@@ -79,7 +79,7 @@ class DepartmentModel(db.Model):
     name = db.Column(db.String(50), nullable=False)
     description = db.Column(db.Text)
     # 科室所属医院
-    hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id'), nullable=False)
+    hospital_id = db.Column(db.Integer, db.ForeignKey('hospital.id'), nullable=True)
     # 科室的医生集合
     doctors = db.relationship('DoctorInfoModel', backref='department', lazy='dynamic')
     # 同一医院内科室名称唯一
