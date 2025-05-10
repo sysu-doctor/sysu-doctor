@@ -3,15 +3,13 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 import re
 from datetime import datetime, date
-from utils import Result
+from utils import Result, validate_phone_number
 from exts import db
 from models import PatientInfoModel, PatientModel
+from vo import PatientInfoVO
 
 bp = Blueprint("patient_info", __name__, url_prefix='/patient')
 
-def validate_phone_number(phone):
-    pattern = r'^1[3-9]\d{9}$'
-    return re.match(pattern, phone) is not None
 
 @bp.route('/patient_manage', methods=['PATCH'])
 @jwt_required()
@@ -66,3 +64,19 @@ def patient_management():
     except Exception as e:
         db.session.rollback()
         return jsonify(Result.error(f"服务器错误: {str(e)}").to_dict()), 500
+
+@bp.route('/', methods=['GET'])
+@jwt_required()
+def get_patient_info():
+    patient_id = str(get_jwt_identity())
+    patient_info = PatientInfoModel.query.filter_by(id=patient_id).first()
+    if not patient_info:
+        return jsonify(Result.error("用户不存在").to_dict()), 404
+    patient_info_vo = PatientInfoVO(patient_info.phone,
+                                    patient_info.name,
+                                    patient_info.gender,
+                                    patient_info.address,
+                                    patient_info.birth_date,
+                                    patient_info.avatar_url,
+                                    patient_info.medical_history)
+    return jsonify(Result.success(patient_info_vo.to_dict()).to_dict())

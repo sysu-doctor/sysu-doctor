@@ -43,7 +43,11 @@ requirements.txt记录了项目依赖的库，直接在终端输入即可，在p
     
         | - doctor.py
     
-    | - user.py
+        | - user.py
+        
+        | - doctor_manager.py
+    
+        | - user_manager.py
     
     | - app.py    启动
     
@@ -187,8 +191,8 @@ jsonify可以将字典或者可序列化的对象转为JSON格式，使用Result
 
 ```json
 {
-    "code":1,
-    "msg":"",
+    "code":1,    // 1代表成功，0表示失败
+    "msg":"",    // 错误信息
     "data":{
         "id":1,
         "name":"Tom",
@@ -210,7 +214,26 @@ class LoginVO:
         return {"id": self.id, "name": self.name, "role": self.role, "token": self.token}
 ```
 
+关于数据库迁移，因为我们做一点设计一点的开发流程，因此在未来难免会遇到数据库变更，因此需要进行数据库迁移，但是经过实践发现，对迁移脚本进行版本控制会有很多莫名其妙的问题，因此我们不对migration下的文件进行版本控制。
 
+如果你刚克隆代码到本地，还没有migrations文件夹，在终端依次执行下面的指令
+
+```
+flask db init
+flask db migrate
+flask db upgrate
+```
+
+另外新建数据库后将原始数据导入数据库，如下图，右上角连接到你的数据库后，选中所有语句，点击左上角。
+
+![image-20250510230008826](./github项目开发过程.assets/image-20250510230008826.png)
+
+如果是开发过程，更新数据库，则只需要
+
+```
+flask db migrate
+flask db upgrate
+```
 
 **我们的主要工作就是实现蓝图里的模块。**
 
@@ -218,9 +241,11 @@ class LoginVO:
 
 # 接口测试
 
-注意写后端的同学一定要进行接口测试
+前后端的同学都能用Apifox进行接口测试，原理就是模拟另一端发来的请求/响应
 
 使用Apifox进行接口测试
+
+教程【22分钟学会Apifox！2024年的Apifox有什么全新功能？】 https://www.bilibili.com/video/BV1Jc41147xC/?share_source=copy_web&vd_source=1049d130a97c4a4a9c5862ead3e70415
 
 下载Apifox后，可以加入团队：
 
@@ -292,3 +317,6 @@ git rebase --continue
 git push origin your-branch-name
 ```
 
+关于Git，推荐下面课程，除了上面的命令行，也可以学着使用pycharm中集成的git
+
+【尚硅谷Git入门到精通全套教程（涵盖GitHub\Gitee码云\GitLab）】 https://www.bilibili.com/video/BV1vy4y1s7k6/?p=32&share_source=copy_web&vd_source=1049d130a97c4a4a9c5862ead3e70415

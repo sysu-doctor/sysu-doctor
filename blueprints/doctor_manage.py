@@ -3,23 +3,17 @@ from flask_jwt_extended import jwt_required,get_jwt_identity
 from sqlalchemy.exc import IntegrityError
 import re
 from datetime import datetime,date
-from utils import Result
+from utils import Result, validate_phone_number
 from exts import db
 from models import DoctorInfoModel,DoctorModel,DepartmentModel,HospitalModel
+from vo import DoctorInfoVO
 
 bp = Blueprint("doctor_info", __name__, url_prefix='/doctor')
 
 
-
-def validate_phone_number(phone):
-    """简化版手机号验证（仅限国内）"""
-    pattern = r'^1[3-9]\d{9}$'  # 严格的11位国内手机号
-    return re.match(pattern, phone) is not None
-
-
 @bp.route('/doctor_manage', methods=['PATCH'])
 @jwt_required()
-def patient_management():
+def doctor_management():
     """部分更新医生信息（自动同步手机号和姓名）"""
 
     data = request.get_json()
@@ -82,3 +76,26 @@ def patient_management():
     except Exception as e:
         db.session.rollback()
         return jsonify(Result.error(f"服务器错误: {str(e)}").to_dict()), 500
+
+@bp.route('/', methods=['GET'])
+@jwt_required()
+def get_doctor_info():
+    doctor_id = str(get_jwt_identity())
+    doctor_info = DoctorInfoModel.query.filter_by(id=doctor_id).first()
+    if not doctor_info:
+        return jsonify(Result.error("用户不存在").to_dict()), 404
+    hospital = HospitalModel.query.filter_by(id=doctor_info.hospital_id).first()
+    hospital_name = hospital.name
+    department = DepartmentModel.query.filter_by(id=doctor_info.department_id).first()
+    department_name = department.name
+    doctor_info_vo = DoctorInfoVO(doctor_info.phone,
+                                  doctor_info.name,
+                                  doctor_info.gender,
+                                  hospital_name,
+                                  department_name,
+                                  doctor_info.internal_id,
+                                  doctor_info.position_rank,
+                                  doctor_info.specialty,
+                                  doctor_info.birth_date,
+                                  doctor_info.avatar_url)
+    return jsonify(Result.success(doctor_info_vo.to_dict()).to_dict())

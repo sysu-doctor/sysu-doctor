@@ -10,7 +10,7 @@ from blueprints.patient import bp as patient_auth_bp
 from blueprints.doctor import bp as doctor_auth_bp
 from blueprints.patient_manage import bp as patient_info_bp
 from blueprints.doctor_manage import bp as doctor_info_bp
-from utils import jwt_interceptor
+# from utils import jwt_interceptor
 
 
 def create_app(config_name=None):
@@ -25,7 +25,7 @@ def create_app(config_name=None):
 
     # jwt验证
     jwt = JWTManager(app)
-    app.before_request(jwt_interceptor)
+    # app.before_request(jwt_interceptor)
 
     # 注册蓝本
     # 登录注册蓝图

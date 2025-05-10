@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify
 from flask import request
 from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError
-from utils import Result
+from utils import Result, validate_phone_number
 from exts import db
 from models import PatientModel,PatientInfoModel
 from vo import LoginVO
@@ -40,6 +40,9 @@ def register():
     # 读取请求数据
     data = request.get_json()
     phone = data.get('phone')
+    # 校验手机号
+    if not validate_phone_number(phone):
+        return jsonify(Result.error("请求中缺少 phone 或 name 字段").to_dict()), 400
     password = data.get('password')
     name = data.get('name')
 
