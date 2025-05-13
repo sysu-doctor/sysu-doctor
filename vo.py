@@ -28,7 +28,7 @@ class PatientInfoVO:
                 "medical_history": self.medical_history}
 
 class DoctorInfoVO:
-    def __init__(self, phone, name, gender, hospital, department, internal_id,position_rank, specialty, birth_date, avatar_url):
+    def __init__(self, phone, name, gender, hospital, department, internal_id,position_rank, specialty, birth_date, avatar_url,schedule):
         self.phone = phone
         self.name = name
         self.gender = gender
@@ -39,6 +39,7 @@ class DoctorInfoVO:
         self.specialty = specialty
         self.birth_date = birth_date
         self.avatar_url = avatar_url
+        self.schedule = schedule
     def to_dict(self):
         return {"phone": self.phone,
                 "name": self.name,
@@ -49,4 +50,5 @@ class DoctorInfoVO:
                 "position_rank": self.position_rank,
                 "specialty": self.specialty,
                 "birth_date": self.birth_date,
-                "avatar_url": self.avatar_url}
+                "avatar_url": self.avatar_url,
+                "schedule": self.schedule}

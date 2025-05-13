@@ -64,7 +64,8 @@ def register():
             position_rank=None,
             specialty='',
             birth_date=None,
-            avatar_url=None
+            avatar_url=None,
+            schedule=None
         )
         db.session.add(doctor_info)
         db.session.commit()

@@ -70,6 +70,14 @@ class DoctorInfoModel(db.Model):
     birth_date = db.Column(db.Date)  # 存储"YYYY-MM-DD"格式
     # 头像
     avatar_url = db.Column(db.String(255))
+    # 出诊时间安排，一般医生周一到周五至少出诊两天
+    schedule = db.Column(db.JSON, nullable=True, default=lambda: {
+        "monday": {"morning": False, "afternoon": False},
+        "tuesday": {"morning": False, "afternoon": False},
+        "wednesday": {"morning": False, "afternoon": False},
+        "thursday": {"morning": False, "afternoon": False},
+        "friday": {"morning": False, "afternoon": False}
+    })
 
 
 # 科室表
