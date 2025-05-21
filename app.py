@@ -4,13 +4,18 @@ from flask import Flask
 from flask_jwt_extended import JWTManager
 
 from config import config
-from exts import db, migrate
+from exts import db, migrate, socketio
 from models import PatientModel, DoctorModel
 from blueprints.patient import bp as patient_auth_bp
 from blueprints.doctor import bp as doctor_auth_bp
 from blueprints.patient_manage import bp as patient_info_bp
 from blueprints.doctor_manage import bp as doctor_info_bp
+from blueprints.chat import bp as chat_bp
 # from utils import jwt_interceptor
+from dotenv import load_dotenv
+import consultant
+
+load_dotenv()
 
 
 def create_app(config_name=None):
@@ -22,6 +27,7 @@ def create_app(config_name=None):
 
     db.init_app(app)
     migrate.init_app(app, db)
+    socketio.init_app(app, async_mode='eventlet')
 
     # jwt验证
     jwt = JWTManager(app)
@@ -34,6 +40,11 @@ def create_app(config_name=None):
     # 个人信息管理蓝图
     app.register_blueprint(patient_info_bp)
     app.register_blueprint(doctor_info_bp)
+    # 问诊接口蓝图
+    app.register_blueprint(chat_bp)
 
     return app
 
+app = create_app('development')
+if __name__ == '__main__':
+    socketio.run(app, debug=False)

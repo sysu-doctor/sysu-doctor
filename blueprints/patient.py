@@ -28,7 +28,7 @@ def login():
         return jsonify(Result.error("密码错误！").to_dict())
 
     # 登录成功，生成JWT令牌
-    token = create_access_token(identity=str(patient.id), additional_claims={"role":"patient"})
+    token = create_access_token(identity=str(patient.id), additional_claims={"role":"patient", "name":patient.name}, )
 
     #返回结果
     login_vo = LoginVO(id=patient.id, name=patient.name, token=token, role="patient")

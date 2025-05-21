@@ -102,3 +102,43 @@ class HospitalModel(db.Model):
     name = db.Column(db.String(100), unique=True, nullable=False)
     # 医院的科室集合
     departments = db.relationship('DepartmentModel', backref='hospital', lazy='dynamic')
+
+class MessageModel(db.Model):
+    __tablename__ = 'message'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    from_user = db.Column(db.String(50), nullable=False)
+    from_user_avatar = db.Column(db.String(255), nullable=True)
+    to_user = db.Column(db.String(50), nullable=False)
+    to_user_avatar = db.Column(db.String(255), nullable=True)
+    content = db.Column(db.Text, nullable=False)
+    time = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    read = db.Column(db.Integer, nullable=False, default=False)
+    type = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {
+            "from_user": self.from_user,
+            "from_user_avatar": self.from_user_avatar,
+            "to_user": self.to_user,
+            "to_user_avatar": self.to_user_avatar,
+            "content": self.content,
+            "time": self.time.isoformat(),  # 时间转字符串
+            "read": bool(self.read),  # 布尔值转换
+            "type": self.type
+        }
+
+class RoomModel(db.Model):
+    __tablename__ = 'room'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    doctor_id = db.Column(db.Integer, nullable=False)
+    doctor_name = db.Column(db.String(50), nullable=False)
+    patient_id = db.Column(db.Integer, nullable=False)
+    patient_name = db.Column(db.String(50), nullable=False)
+
+    def to_dict(self):
+        return {
+            "doctor_id": self.doctor_id,
+            "doctor_name": self.doctor_name,
+            "patient_id": self.patient_id,
+            "patient_name": self.patient_name
+        }
