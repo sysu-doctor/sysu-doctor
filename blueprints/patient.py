@@ -23,12 +23,12 @@ def login():
 
     # 数据处理
     if not patient:
-        return jsonify(Result.error("该手机号未注册！").to_dict())
+        return jsonify(Result.error("该手机号未注册！").to_dict()),400
     if password != patient.password:
-        return jsonify(Result.error("密码错误！").to_dict())
+        return jsonify(Result.error("密码错误！").to_dict()),400
 
     # 登录成功，生成JWT令牌
-    token = create_access_token(identity=str(patient.id), additional_claims={"role":"patient", "name":patient.name}, )
+    token = create_access_token(identity=str(patient.id), additional_claims={"role":"patient"})
 
     #返回结果
     login_vo = LoginVO(id=patient.id, name=patient.name, token=token, role="patient")
@@ -39,12 +39,17 @@ def login():
 def register():
     # 读取请求数据
     data = request.get_json()
+
+    if not data.get('phone') or not data.get('password') or not data.get('name'):
+        return jsonify(Result.error("请填入完整的信息！").to_dict()),400
+
     phone = data.get('phone')
-    # 校验手机号
-    if not validate_phone_number(phone):
-        return jsonify(Result.error("请求中缺少 phone 或 name 字段").to_dict()), 400
     password = data.get('password')
     name = data.get('name')
+
+    # 校验手机号
+    if not validate_phone_number(phone):
+        return jsonify(Result.error("请输入正确的手机号!").to_dict()), 400
 
     # 数据库操作
     try:
@@ -64,14 +69,13 @@ def register():
         )
         db.session.add(patient_info)
         db.session.commit()
+
     except IntegrityError as e:
         db.session.rollback()
-        if "phone" in str(e):
-            return jsonify(Result.error("该手机号已被注册").to_dict()), 400
-        return jsonify(Result.error("数据完整性错误").to_dict()), 400
+        return jsonify(Result.error("该手机号已被注册！").to_dict()), 400
     except Exception as e:
         db.session.rollback()
-        return jsonify(Result.error("注册失败，请稍后再试").to_dict()), 500
+        return jsonify(Result.error("未知错误").to_dict()), 500
 
     # 返回结果
     result = Result.success()

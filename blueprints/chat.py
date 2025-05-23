@@ -45,11 +45,9 @@ def get_message():
     messages_list = []
     # 同时设为已读
     claims = get_jwt()
-    id = get_jwt_identity()
     name = claims.get("name")
-    role = claims.get("role")
     for message in messages:
-        if message.to_user == name + id + role:
+        if message.to_user == name:
             message.read = 1
         messages_list.append(message.to_dict())
 
