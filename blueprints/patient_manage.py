@@ -11,7 +11,7 @@ from vo import PatientInfoVO
 bp = Blueprint("patient_info", __name__, url_prefix='/patient')
 
 
-@bp.route('/patient_manage', methods=['PATCH'])
+@bp.route('/patient_manage', methods=['PUT'])
 @jwt_required()
 def patient_management():
     try:
@@ -76,7 +76,7 @@ def get_patient_info():
                                     patient_info.name,
                                     patient_info.gender,
                                     patient_info.address,
-                                    patient_info.birth_date,
+                                    patient_info.birth_date.strftime("%Y-%m-%d") if patient_info.birth_date else None,
                                     patient_info.avatar_url,
                                     patient_info.medical_history)
     return jsonify(Result.success(patient_info_vo.to_dict()).to_dict())

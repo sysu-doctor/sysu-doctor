@@ -2,6 +2,7 @@ import os
 
 from flask import Flask
 from flask_jwt_extended import JWTManager
+from flask_cors import CORS
 
 from config import config
 from exts import db, migrate, socketio
@@ -33,6 +34,10 @@ def create_app(config_name=None):
     jwt = JWTManager(app)
     # app.before_request(jwt_interceptor)
 
+    # 允许跨域
+    CORS(app, supports_credentials=True, origins=["http://localhost:7070"],
+         allow_headers=["Content-Type", "Authorization"])
+
     # 注册蓝本
     # 登录注册蓝图
     app.register_blueprint(patient_auth_bp)
@@ -46,5 +51,6 @@ def create_app(config_name=None):
     return app
 
 app = create_app('development')
+
 if __name__ == '__main__':
     socketio.run(app, debug=False)

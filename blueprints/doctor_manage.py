@@ -11,7 +11,7 @@ from vo import DoctorInfoVO
 bp = Blueprint("doctor_info", __name__, url_prefix='/doctor')
 
 
-@bp.route('/doctor_manage', methods=['PATCH'])
+@bp.route('/doctor_manage', methods=['PUT'])
 @jwt_required()
 def doctor_management():
     """部分更新医生信息（自动同步手机号和姓名）"""
