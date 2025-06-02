@@ -91,12 +91,22 @@ def get_doctor_info():
     doctor_info_vo = DoctorInfoVO(doctor_info.phone,
                                   doctor_info.name,
                                   doctor_info.gender,
-                                  hospital_name,
-                                  department_name,
+                                  doctor_info.hospital_id,
+                                  doctor_info.department_id,
                                   doctor_info.internal_id,
                                   doctor_info.position_rank,
                                   doctor_info.specialty,
-                                  doctor_info.birth_date,
+                                  doctor_info.birth_date.strftime("%Y-%m-%d") if doctor_info.birth_date else None,
                                   doctor_info.avatar_url,
                                   doctor_info.schedule)
     return jsonify(Result.success(doctor_info_vo.to_dict()).to_dict())
+
+@bp.route('/departments/<int:hospital_id>', methods=['GET'])
+@jwt_required()
+def get_departments_by_hospital(hospital_id):
+    if not hospital_id:
+        return jsonify(Result.error("缺少 hospital_id 参数").to_dict()), 400
+
+    departments = DepartmentModel.query.filter_by(hospital_id=hospital_id).order_by(DepartmentModel.id).all()
+    result = [{"id": dept.id, "name": dept.name} for dept in departments]
+    return jsonify(Result.success(result).to_dict())

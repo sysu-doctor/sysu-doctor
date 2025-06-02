@@ -18,7 +18,7 @@ def connect():
 def disconnect():
     print("disconnected")
 
-@socketio.on('message')
+@socketio.on('sendMessage')
 def message(data):
     from_user = data['from_user']
     from_user_avatar = data['from_user_avatar']
@@ -31,7 +31,7 @@ def message(data):
         message = MessageModel(from_user=from_user, from_user_avatar=from_user_avatar, to_user=to_user, to_user_avatar=to_user_avatar, content=content, read=read, type=type)
         db.session.add(message)
         db.session.commit()
-        emit('response', message.to_dict(), broadcast=True)
+        emit('newMessage', message.to_dict(), broadcast=True)
     except Exception as e:
         db.session.rollback()
 

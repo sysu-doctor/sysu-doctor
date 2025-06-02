@@ -4,7 +4,7 @@ from flask_jwt_extended import create_access_token
 from sqlalchemy.exc import IntegrityError
 from utils import Result, validate_phone_number
 from exts import db
-from models import PatientModel,PatientInfoModel
+from models import PatientModel, PatientInfoModel, DoctorInfoModel
 from vo import LoginVO
 
 # 改成patient可能更好
@@ -84,4 +84,23 @@ def register():
 @bp.route('/logout', methods=['POST'])
 def logout():
     result = Result.success()
+    return jsonify(result.to_dict())
+
+@bp.route('/doctorlist', methods=['GET'])
+def doctor_list():
+    # 查询所有医生
+    doctors = DoctorInfoModel.query.all()
+
+    # 转换为字典列表
+    doctor_list = [
+        {
+            **doctor.to_dict(),
+            "hospital": doctor.hospital.name if doctor.hospital else None,
+            "department": doctor.department.name if doctor.department else None
+        }
+        for doctor in doctors
+    ]
+
+    # 返回结果
+    result = Result.success(doctor_list)
     return jsonify(result.to_dict())

@@ -79,6 +79,22 @@ class DoctorInfoModel(db.Model):
         "friday": {"morning": False, "afternoon": False}
     })
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "phone": self.phone,
+            "name": self.name,
+            "gender": self.gender,
+            "hospital_id": self.hospital_id,
+            "hospital_name": self.hospital.name if self.hospital else None,
+            "department_id": self.department_id,
+            "department_name": self.department.name if self.department else None,
+            "position_rank": self.position_rank,
+            "specialty": self.specialty,
+            "avatar_url": self.avatar_url,
+            "schedule": self.schedule,
+        }
+
 
 # 科室表
 class DepartmentModel(db.Model):
@@ -130,10 +146,12 @@ class MessageModel(db.Model):
 class RoomModel(db.Model):
     __tablename__ = 'room'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    doctor_id = db.Column(db.Integer, nullable=False)
-    doctor_name = db.Column(db.String(50), nullable=False)
-    patient_id = db.Column(db.Integer, nullable=False)
-    patient_name = db.Column(db.String(50), nullable=False)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctor.id'), nullable=False)
+    doctor = db.relationship('DoctorModel', backref='rooms')
+
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient.id'), nullable=False)
+    patient = db.relationship('PatientModel', backref='rooms')
+
 
     def to_dict(self):
         return {
@@ -141,4 +159,27 @@ class RoomModel(db.Model):
             "doctor_name": self.doctor_name,
             "patient_id": self.patient_id,
             "patient_name": self.patient_name
+        }
+
+class RegistrationModel(db.Model):
+    __tablename__ = 'registration'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patient_info.id'), nullable=False)
+    patient = db.relationship('PatientInfoModel', backref='registrations')
+
+    doctor_id = db.Column(db.Integer, db.ForeignKey('doctor_info.id'), nullable=False)
+    doctor = db.relationship('DoctorInfoModel', backref='registrations')
+
+    date = db.Column(db.Date, nullable=False, default=datetime.now)
+    time_slot = db.Column(db.String(50), nullable=False)  # 时间段，例如 "morning", "afternoon"
+
+    def to_dict(self):
+        return {
+            "patient": self.patient.name,
+            "phone": self.patient.phone,
+            "doctor": self.doctor.name,
+            "hospital": self.doctor.hospital.name if self.doctor.hospital else None,
+            "department": self.doctor.department.name if self.doctor.department else None,
+            "date": self.date.isoformat(),
+            "time_slot": self.time_slot
         }

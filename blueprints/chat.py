@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy import or_, and_, func
 
 from exts import db
-from models import MessageModel, RoomModel, DoctorModel, PatientModel
+from models import MessageModel, RoomModel, DoctorModel, PatientModel, DoctorInfoModel, PatientInfoModel
 from utils import Result
 
 bp = Blueprint("chat", __name__, url_prefix='/chat')
@@ -13,9 +13,7 @@ bp = Blueprint("chat", __name__, url_prefix='/chat')
 @jwt_required()
 def new_chat(doctor_id):
     try:
-        doctor = DoctorModel.query.get(doctor_id)
-        patient = PatientModel.query.get(int(get_jwt_identity()))
-        room = RoomModel(doctor_id=doctor.id, doctor_name=doctor.name, patient_id=patient.id, patient_name=patient.name)
+        room = RoomModel(doctor_id=doctor_id, patient_id=int(get_jwt_identity()))
         db.session.add(room)
         db.session.commit()
         return jsonify(Result.success().to_dict())
@@ -45,9 +43,10 @@ def get_message():
     messages_list = []
     # 同时设为已读
     claims = get_jwt()
-    name = claims.get("name")
+    role = claims.get("role")
+    id = get_jwt_identity()
     for message in messages:
-        if message.to_user == name:
+        if message.to_user == role + "_" + id:
             message.read = 1
         messages_list.append(message.to_dict())
 
@@ -63,31 +62,69 @@ def get_user_list():
     role = claims["role"]
     id = int(get_jwt_identity())
     if role == "doctor":
-        patients = RoomModel.query.filter(RoomModel.doctor_id == id).all()
+        to_user = "doctor_" + str(id)
+        # 查询发给当前用户的消息中未读的数目，并根据发送人分组
+        messages = (
+            db.session.query(MessageModel.from_user, func.count(MessageModel.id).label('count'))
+            .filter(and_(MessageModel.to_user == to_user, MessageModel.read == 0))
+            .group_by(MessageModel.from_user)
+            .all()
+        )
+        message_dicts = [{'from_user': from_user, 'count': count} for from_user, count in messages]
+
+        id_list = db.session.query(RoomModel.patient_id).filter(RoomModel.doctor_id == id).all()
+        id_list = [item[0] for item in id_list]
+        list = PatientInfoModel.query.filter(PatientInfoModel.id.in_(id_list)).all()
         patients_list = []
-        for patient in patients:
-            patients_list.append({"patient_id": patient.patient_id, "patient_name": patient.patient_name})
+        for p in list:
+            from_user = "patient_" + str(p.id)
+
+            patients_list.append({"id": p.id,
+                                  "name": p.name,
+                                  "avatar_url": p.avatar_url,
+                                  "unreadCount": next((item['count'] for item in message_dicts if item['from_user'] == from_user), 0)})
         return jsonify(Result.success(patients_list).to_dict())
     else:
-        doctors = RoomModel.query.filter(RoomModel.patient_id == id).all()
+        to_user = "patient_" + str(id)
+        # 查询发给当前用户的消息中未读的数目，并根据发送人分组
+        messages = (
+            db.session.query(MessageModel.from_user, func.count(MessageModel.id).label('count'))
+            .filter(and_(MessageModel.to_user == to_user, MessageModel.read == 0))
+            .group_by(MessageModel.from_user)
+            .all()
+        )
+        message_dicts = [{'from_user': from_user, 'count': count} for from_user, count in messages]
+        id_list = db.session.query(RoomModel.doctor_id).filter(RoomModel.patient_id == id).all()
+        print(id_list)
+        id_list = [item[0] for item in id_list]
+        list = DoctorInfoModel.query.filter(DoctorInfoModel.id.in_(id_list)).all()
+        print(list)
         doctors_list = []
-        for doctor in doctors:
-            doctors_list.append({"doctor_id": doctor.doctor_id, "doctor_name": doctor.doctor_name})
+        for d in list:
+            from_user = "doctor_" + str(d.id)
+            doctors_list.append({"id": d.id,
+                                 "name": d.name,
+                                 "avatar_url": d.avatar_url,
+                                 "department": d.department.name,
+                                 "position_rank": d.position_rank,
+                                 "hospital": d.hospital.name if d.hospital else None,
+                                 "unreadCount": next((item['count'] for item in message_dicts if item['from_user'] == from_user), 0)})
+        print(doctors_list)
         return jsonify(Result.success(doctors_list).to_dict())
 
 
-@bp.route("/unread", methods=["GET"])
-@jwt_required()
-def get_unread():
-    to_user = request.args.get("to_user")
-
-    #查询发给当前用户的消息中未读的数目，并根据发送人分组
-    messages = (
-        db.session.query(MessageModel.from_user, func.count(MessageModel.id).label('count'))
-        .filter(and_(MessageModel.to_user == to_user, MessageModel.read == 0))
-        .group_by(MessageModel.from_user)
-        .all()
-    )
-
-    message_dicts = [{'from_user': from_user, 'count': count} for from_user, count in messages]
-    return jsonify(Result.success(message_dicts).to_dict())
+# @bp.route("/unread", methods=["GET"])
+# @jwt_required()
+# def get_unread():
+#     to_user = request.args.get("to_user")
+#
+#     #查询发给当前用户的消息中未读的数目，并根据发送人分组
+#     messages = (
+#         db.session.query(MessageModel.from_user, func.count(MessageModel.id).label('count'))
+#         .filter(and_(MessageModel.to_user == to_user, MessageModel.read == 0))
+#         .group_by(MessageModel.from_user)
+#         .all()
+#     )
+#
+#     message_dicts = [{'from_user': from_user, 'count': count} for from_user, count in messages]
+#     return jsonify(Result.success(message_dicts).to_dict())

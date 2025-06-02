@@ -42,3 +42,5 @@ build/
 
 # 迁移脚本（太多bug）
 migrations
+
+README.md

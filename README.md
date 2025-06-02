@@ -1,1 +1,0 @@
-# sysu-doctor
