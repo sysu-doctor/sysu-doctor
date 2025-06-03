@@ -105,7 +105,7 @@ def get_user_list():
             doctors_list.append({"id": d.id,
                                  "name": d.name,
                                  "avatar_url": d.avatar_url,
-                                 "department": d.department.name,
+                                 "department": d.department.name if d.department else None,
                                  "position_rank": d.position_rank,
                                  "hospital": d.hospital.name if d.hospital else None,
                                  "unreadCount": next((item['count'] for item in message_dicts if item['from_user'] == from_user), 0)})

@@ -84,10 +84,10 @@ def get_doctor_info():
     doctor_info = DoctorInfoModel.query.filter_by(id=doctor_id).first()
     if not doctor_info:
         return jsonify(Result.error("用户不存在").to_dict()), 404
-    hospital = HospitalModel.query.filter_by(id=doctor_info.hospital_id).first()
-    hospital_name = hospital.name
-    department = DepartmentModel.query.filter_by(id=doctor_info.department_id).first()
-    department_name = department.name
+    # hospital = HospitalModel.query.filter_by(id=doctor_info.hospital_id).first()
+    # hospital_name = hospital.name
+    # department = DepartmentModel.query.filter_by(id=doctor_info.department_id).first()
+    # department_name = department.name
     doctor_info_vo = DoctorInfoVO(doctor_info.phone,
                                   doctor_info.name,
                                   doctor_info.gender,
