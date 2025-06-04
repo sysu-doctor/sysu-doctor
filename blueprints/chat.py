@@ -128,3 +128,25 @@ def get_user_list():
 #
 #     message_dicts = [{'from_user': from_user, 'count': count} for from_user, count in messages]
 #     return jsonify(Result.success(message_dicts).to_dict())
+
+@bp.route("/<int:doctor_id>", methods=["DELETE"])
+@jwt_required()
+def delete_chat(doctor_id):
+    try:
+        patient_id = int(get_jwt_identity())
+        room = RoomModel.query.filter_by(doctor_id=doctor_id, patient_id=patient_id).first()
+        if not room:
+            return jsonify(Result.error("没有找到对应的聊天记录").to_dict()), 404
+        db.session.delete(room)
+        from_user = "doctor_" + str(doctor_id)
+        to_user = "patient_" + str(patient_id)
+        # 删除对应的消息记录
+        MessageModel.query.filter(
+            or_(and_(MessageModel.from_user == from_user, MessageModel.to_user == to_user),
+                and_(MessageModel.from_user == to_user, MessageModel.to_user == from_user))
+        ).delete(synchronize_session=False)
+        db.session.commit()
+        return jsonify(Result.success().to_dict())
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(Result.error("服务器异常！").to_dict())
