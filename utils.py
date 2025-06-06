@@ -1,34 +1,11 @@
-from flask import request, g, make_response
-from flask_jwt_extended import get_jwt, get_jwt_identity, verify_jwt_in_request
+from dotenv import load_dotenv
 import re
+import oss2
+import os
 
-WHITE_LIST = [
-    "/patient/login",
-    "/patient/register",
-    "/doctor/login",
-    "/doctor/register",
-    "/patient"
-    ]
+from flask import jsonify
 
-# 可通过@jwt_required()装饰器完成
-# jwt拦截器
-# def jwt_interceptor():
-#     # 检查当前请求路径是否在白名单中
-#     path = request.path
-#     if any(path.startswith(p) for p in WHITE_LIST):
-#         return None
-#
-#     try:
-#         # 手动校验JWT令牌
-#         verify_jwt_in_request()
-#         # 将用户身份信息存入g对象供后续使用
-#         g.user = get_jwt_identity()
-#         g.role = get_jwt()['role']
-#
-#     except Exception as e:
-#         # 返回具体的错误信息
-#         return make_response('', 401)
-
+load_dotenv()
 
 # 返回格式
 class Result:
@@ -56,3 +33,24 @@ def validate_phone_number(phone):
     """简化版手机号验证（仅限国内）"""
     pattern = r'^1[3-9]\d{9}$'  # 严格的11位国内手机号
     return re.match(pattern, phone) is not None
+
+# 文件上传功能
+def upload_file(file_object, file_name):
+    access_key_id = os.getenv('OSS_ACCESS_KEY_ID')
+    access_key_secret = os.getenv('OSS_ACCESS_KEY_SECRET')
+    endpoint = os.getenv('OSS_ENDPOINT')
+    bucket_name = os.getenv('OSS_BUCKET_NAME')
+
+    # 初始化 Bucket
+    auth = oss2.Auth(access_key_id, access_key_secret)
+    bucket = oss2.Bucket(auth, endpoint, bucket_name)
+
+    try:
+        bucket.put_object(file_name, file_object.stream)
+    except oss2.exceptions.OssError as e:
+        raise e
+    except Exception as e:
+        raise e
+
+    file_url = f"https://{bucket_name}.{endpoint}/{file_name}"
+    return file_url

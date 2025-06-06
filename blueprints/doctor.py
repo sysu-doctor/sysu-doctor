@@ -26,11 +26,13 @@ def login():
     if password != doctor.password:
         return jsonify(Result.error("密码错误！").to_dict()),400
 
+    doctor = DoctorInfoModel.query.filter_by(phone=phone).one_or_none()
+
     # 登录成功，生成JWT令牌
     token = create_access_token(identity=str(doctor.id), additional_claims={"role":"doctor"})
 
     #返回结果
-    login_vo = LoginVO(id=doctor.id, name=doctor.name, token=token, role="doctor")
+    login_vo = LoginVO(id=doctor.id, name=doctor.name, token=token, avatar_url=doctor.avatar_url, role="doctor")
     result = Result.success(login_vo.to_dict())
     return jsonify(result.to_dict())
 
@@ -67,7 +69,7 @@ def register():
             position_rank=None,
             specialty='',
             birth_date=None,
-            avatar_url=None,
+            avatar_url='https://pic.616pic.com/ys_bnew_img/00/30/13/VgZR6eQ01M.jpg',
             schedule=None
         )
         db.session.add(doctor_info)

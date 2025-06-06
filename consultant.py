@@ -25,6 +25,7 @@ def message(data):
     to_user = data['to_user']
     to_user_avatar = data['to_user_avatar']
     content = data['content']
+    print(content)
     read = 0
     type = data['type']
     try:
@@ -33,6 +34,7 @@ def message(data):
         db.session.commit()
         emit('newMessage', message.to_dict(), broadcast=True)
     except Exception as e:
+        print("Error saving message:", e)
         db.session.rollback()
 
 

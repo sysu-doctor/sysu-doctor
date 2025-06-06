@@ -1,13 +1,14 @@
 # view object
 
 class LoginVO:
-    def __init__(self, id, name, role, token):
+    def __init__(self, id, name, role, token, avatar_url):
         self.id = id
         self.name = name
         self.role = role
         self.token = token
+        self.avatar_url = avatar_url
     def to_dict(self):
-        return {"id": self.id, "name": self.name, "role": self.role, "token": self.token}
+        return {"id": self.id, "name": self.name, "role": self.role, "avatar_url": self.avatar_url, "token": self.token}
 
 class PatientInfoVO:
     def __init__(self, phone, name, gender, address, birth_date, avatar_url, medical_history):

@@ -27,11 +27,13 @@ def login():
     if password != patient.password:
         return jsonify(Result.error("密码错误！").to_dict()),400
 
+    patient = PatientInfoModel.query.filter_by(phone=phone).one_or_none()
+
     # 登录成功，生成JWT令牌
     token = create_access_token(identity=str(patient.id), additional_claims={"role":"patient"})
 
     #返回结果
-    login_vo = LoginVO(id=patient.id, name=patient.name, token=token, role="patient")
+    login_vo = LoginVO(id=patient.id, name=patient.name, token=token, role="patient", avatar_url=patient.avatar_url)
     result = Result.success(login_vo.to_dict())
     return jsonify(result.to_dict())
 
@@ -63,7 +65,7 @@ def register():
             name=name,  # 同步姓名
             gender=None,
             address=None,
-            avatar_url=None,
+            avatar_url='https://img.88icon.com/download/jpg/20200722/a4cd7b3103675204c43230726adfdaa2_512_512.jpg',
             birth_date=None,
             medical_history=''
         )
