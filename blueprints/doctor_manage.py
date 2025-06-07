@@ -102,7 +102,8 @@ def get_doctor_info():
                                   doctor_info.position_rank,
                                   doctor_info.specialty,
                                   doctor_info.birth_date.strftime("%Y-%m-%d") if doctor_info.birth_date else None,
-                                  doctor_info.avatar_url)
+                                  doctor_info.avatar_url,
+                                  doctor_info.schedule)
     return jsonify(Result.success(doctor_info_vo.to_dict()).to_dict())
 
 @bp.route('/departments/<int:hospital_id>', methods=['GET'])
