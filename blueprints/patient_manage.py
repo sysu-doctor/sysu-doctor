@@ -21,7 +21,7 @@ def patient_management():
 
         # 验证必填字段
         if 'phone' not in data or 'name' not in data:
-            return jsonify(Result.error("请求中缺少 phone 或 name 字段").to_dict()), 400
+            return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
 
         # 手机号验证
         if not validate_phone_number(data['phone']):
@@ -49,7 +49,7 @@ def patient_management():
                 setattr(patient_info, field, value)
 
         # 同步到 PatientModel
-        patient = PatientModel.query.get(patient_id)
+        patient = db.session.get(PatientModel, patient_id)
         if not patient:
             return jsonify(Result.error("用户不存在").to_dict()), 404
         patient.phone = data['phone']

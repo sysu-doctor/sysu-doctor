@@ -15,48 +15,53 @@ bp = Blueprint("doctor_info", __name__, url_prefix='/doctor')
 @jwt_required()
 def doctor_management():
     """部分更新医生信息（自动同步手机号和姓名）"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify(Result.error("请求体不能为空").to_dict()), 400
 
-    data = request.get_json()
+        # 验证必填字段
+        if 'phone' not in data or 'name' not in data:
+            return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
 
-    # 手机号格式验证
-    if 'phone' in data and not validate_phone_number(data['phone']):
-        return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
+        # 手机号验证
+        if not validate_phone_number(data['phone']):
+            return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
 
     # 出生日期验证
-    if 'birth_date' in data:
-        try:
-            birth_date = datetime.strptime(data['birth_date'], "%Y-%m-%d").date()
-            if birth_date > date.today():
-                return jsonify(Result.error("出生日期不能晚于当前日期").to_dict()), 400
-            data['birth_date'] = birth_date  # 替换为date对象
-        except ValueError:
-            return jsonify(Result.error("日期格式应为YYYY-MM-DD").to_dict()), 400
+        if 'birth_date' in data:
+            try:
+                birth_date = datetime.strptime(data['birth_date'], "%Y-%m-%d").date()
+                if birth_date > date.today():
+                    return jsonify(Result.error("出生日期不能晚于当前日期").to_dict()), 400
+                data['birth_date'] = birth_date  # 替换为date对象
+            except ValueError:
+                return jsonify(Result.error("日期格式应为YYYY-MM-DD").to_dict()), 400
 
-    # 获取当前医生
-    doctor_id = str(get_jwt_identity())
+        # 获取当前医生
+        doctor_id = str(get_jwt_identity())
 
-    # 更新主表 DoctorInfoModel
-    doctor_info = DoctorInfoModel.query.filter_by(id=doctor_id).first()
-    if not doctor_info:
-        return jsonify(Result.error("医生信息不存在").to_dict()), 404
+        # 更新主表 DoctorInfoModel
+        doctor_info = DoctorInfoModel.query.filter_by(id=doctor_id).first()
+        if not doctor_info:
+            return jsonify(Result.error("医生信息不存在").to_dict()), 404
 
 
-    # 同步手机号和姓名到 DoctorModel（登录表）
-    doctor = DoctorModel.query.get(doctor_id)
-    if not doctor:
-        return jsonify(Result.error("医生账户不存在").to_dict()), 404
-    doctor.phone = data['phone']
-    doctor.name = data['name']
-    try:
+        # 同步手机号和姓名到 DoctorModel（登录表）
+        doctor = db.session.get(DoctorModel, doctor_id)
+        if not doctor:
+            return jsonify(Result.error("医生账户不存在").to_dict()), 404
+        doctor.phone = data['phone']
+        doctor.name = data['name']
         # 特殊处理关联字段
         if 'hospital_id' in data:
-            hospital = HospitalModel.query.get(data['hospital_id'])
+            hospital = db.session.get(HospitalModel, data['hospital_id'])
             if not hospital:
                 return jsonify(Result.error("医院不存在").to_dict()), 400
             doctor_info.hospital = hospital  # 赋模型对象而非ID
 
         if 'department_id' in data:
-            department = DepartmentModel.query.get(data['department_id'])
+            department = db.session.get(DepartmentModel,data['department_id'])
             if not department:
                 return jsonify(Result.error("科室不存在").to_dict()), 400
             doctor_info.department = department  # 赋模型对象而非ID
@@ -97,8 +102,7 @@ def get_doctor_info():
                                   doctor_info.position_rank,
                                   doctor_info.specialty,
                                   doctor_info.birth_date.strftime("%Y-%m-%d") if doctor_info.birth_date else None,
-                                  doctor_info.avatar_url,
-                                  doctor_info.schedule)
+                                  doctor_info.avatar_url)
     return jsonify(Result.success(doctor_info_vo.to_dict()).to_dict())
 
 @bp.route('/departments/<int:hospital_id>', methods=['GET'])
