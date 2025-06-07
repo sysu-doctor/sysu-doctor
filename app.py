@@ -14,9 +14,11 @@ from blueprints.doctor_manage import bp as doctor_info_bp
 from blueprints.chat import bp as chat_bp
 from blueprints.registration import bp as registration_bp
 from blueprints.upload_file import bp as upload_file_bp
+from blueprints.ai import bp as ai_bp
 # from utils import jwt_interceptor
 from dotenv import load_dotenv
 import consultant
+
 
 load_dotenv()
 
@@ -52,6 +54,8 @@ def create_app(config_name=None):
     app.register_blueprint(chat_bp)
     # 头像上传蓝图
     app.register_blueprint(upload_file_bp)
+    # ai问诊蓝图
+    app.register_blueprint(ai_bp)
 
     return app
 

@@ -5,8 +5,8 @@ from utils import Result, upload_file
 
 bp = blueprints.Blueprint("upload_file", __name__, url_prefix='/upload')
 
-@bp.route('/avatar', methods=['POST'])
-def upload_avatar():
+@bp.route('/picture', methods=['POST'])
+def upload_picture():
     """上传头像"""
     file = request.files.get('file')
     if not file:
@@ -22,7 +22,7 @@ def upload_avatar():
 
     try:
         file_url = upload_file(file, file_name)
-        return jsonify(Result.success({"avatar_url": file_url}).to_dict()), 200
+        return jsonify(Result.success({"file_url": file_url}).to_dict()), 200
     except oss2.exceptions.OssError as e:
         return jsonify(Result.error(f"文件上传失败: {str(e)}").to_dict()), 500
     except Exception as e:

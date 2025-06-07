@@ -81,6 +81,9 @@ def get_user_list():
 
             patients_list.append({"id": p.id,
                                   "name": p.name,
+                                  "gender": p.gender,
+                                  "birth_date": p.birth_date.strftime("%Y-%m-%d") if p.birth_date else None,
+                                  "address": p.address,
                                   "avatar_url": p.avatar_url,
                                   "unreadCount": next((item['count'] for item in message_dicts if item['from_user'] == from_user), 0)})
         return jsonify(Result.success(patients_list).to_dict())
