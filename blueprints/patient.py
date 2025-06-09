@@ -64,8 +64,7 @@ def register():
             phone=phone,  # 同步手机号
             name=name,  # 同步姓名
             gender=None,
-            address=None,
-            avatar_url='https://img.88icon.com/download/jpg/20200722/a4cd7b3103675204c43230726adfdaa2_512_512.jpg',
+            address=None,            avatar_url='https://tse3-mm.cn.bing.net/th/id/OIP-C.uCSRqHDxGs8iC0VK7d_2dgAAAA?r=0&rs=1&pid=ImgDetMain',
             birth_date=None,
             medical_history=''
         )

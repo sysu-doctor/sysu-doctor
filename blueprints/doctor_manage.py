@@ -21,15 +21,15 @@ def doctor_management():
             return jsonify(Result.error("请求体不能为空").to_dict()), 400
 
         # 验证必填字段
-        if 'phone' not in data or 'name' not in data:
-            return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
+        # if 'phone' not in data or 'name' not in data:
+        #     return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
 
         # 手机号验证
-        if not validate_phone_number(data['phone']):
-            return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
+        # if not validate_phone_number(data['phone']):
+        #     return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
 
     # 出生日期验证
-        if 'birth_date' in data:
+        if 'birth_date' in data and data['birth_date'] is not None:
             try:
                 birth_date = datetime.strptime(data['birth_date'], "%Y-%m-%d").date()
                 if birth_date > date.today():
@@ -54,13 +54,13 @@ def doctor_management():
         doctor.phone = data['phone']
         doctor.name = data['name']
         # 特殊处理关联字段
-        if 'hospital_id' in data:
+        if 'hospital_id' in data and data['hospital_id'] is not None:
             hospital = db.session.get(HospitalModel, data['hospital_id'])
             if not hospital:
                 return jsonify(Result.error("医院不存在").to_dict()), 400
             doctor_info.hospital = hospital  # 赋模型对象而非ID
 
-        if 'department_id' in data:
+        if 'department_id' in data and data['department_id'] is not None:
             department = db.session.get(DepartmentModel,data['department_id'])
             if not department:
                 return jsonify(Result.error("科室不存在").to_dict()), 400

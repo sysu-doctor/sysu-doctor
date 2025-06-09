@@ -20,15 +20,15 @@ def patient_management():
             return jsonify(Result.error("请求体不能为空").to_dict()), 400
 
         # 验证必填字段
-        if 'phone' not in data or 'name' not in data:
-            return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
+        # if 'phone' not in data or 'name' not in data:
+        #     return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
 
         # 手机号验证
-        if not validate_phone_number(data['phone']):
-            return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
+        # if not validate_phone_number(data['phone']):
+        #     return jsonify(Result.error("请输入有效的11位国内手机号").to_dict()), 400
 
         # 出生日期验证（可选字段）
-        if 'birth_date' in data:
+        if 'birth_date' in data and data['birth_date'] is not None:
             try:
                 birth_date = datetime.strptime(data['birth_date'], "%Y-%m-%d").date()
                 if birth_date > date.today():
