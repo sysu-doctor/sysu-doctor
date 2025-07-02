@@ -37,7 +37,17 @@ def message(data):
         print("Error saving message:", e)
         db.session.rollback()
 
+@socketio.on("joinRoom")
+def joinRoom(data):
+    doctorId = data['doctorId']
+    emit('newRoom', {'doctorId': doctorId}, broadcast=True)
 
+@socketio.on('leaveRoom')
+def leaveRoom(data):
+    doctorId = data['doctorId']
+    patientId = data['patientId']
+    patientName = data['patientName']
+    emit('endConsultation', {'doctorId': doctorId, 'patientId': patientId, 'patientName': patientName}, broadcast=True)
 
 
 

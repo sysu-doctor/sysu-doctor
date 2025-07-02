@@ -175,6 +175,7 @@ class RegistrationModel(db.Model):
 
     def to_dict(self):
         return {
+            "id": self.id,
             "patient": self.patient.name,
             "phone": self.patient.phone,
             "doctor": self.doctor.name,

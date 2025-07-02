@@ -110,6 +110,7 @@ def get_user_list():
                                  "avatar_url": d.avatar_url,
                                  "department": d.department.name if d.department else None,
                                  "position_rank": d.position_rank,
+                                 "specialty": d.specialty,
                                  "hospital": d.hospital.name if d.hospital else None,
                                  "unreadCount": next((item['count'] for item in message_dicts if item['from_user'] == from_user), 0)})
         print(doctors_list)

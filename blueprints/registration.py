@@ -17,6 +17,9 @@ def add_registration():
     time_slot = data.get("timeSlot")
     if not patient_id or not doctor_id or not date or not time_slot:
         return jsonify(Result.error("请填入完整的信息！").to_dict()), 400
+    if RegistrationModel.query.filter_by(patient_id=patient_id, doctor_id=doctor_id, date=date,
+                                      time_slot=time_slot).first():
+        return jsonify(Result.error("您已预约过该时段！").to_dict()), 400
     try:
         registration = RegistrationModel(
             patient_id=patient_id,
@@ -46,3 +49,18 @@ def get_registration():
         registration_list = [reg.to_dict() for reg in registrations]
 
     return jsonify(Result.success(registration_list).to_dict()), 200
+
+@bp.route("/registration/<int:registration_id>", methods=["DELETE"])
+@jwt_required()
+def delete_registration(registration_id):
+    registration = RegistrationModel.query.get(registration_id)
+    if not registration:
+        return jsonify(Result.error("预约记录不存在").to_dict()), 404
+
+    try:
+        db.session.delete(registration)
+        db.session.commit()
+        return jsonify(Result.success().to_dict()), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify(Result.error("服务器异常").to_dict()), 500
